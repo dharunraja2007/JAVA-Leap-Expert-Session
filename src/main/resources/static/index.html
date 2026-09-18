@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Accounts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f5f9;
+            margin: 0;
+            padding: 40px;
+            color: #333;
+        }
+        h2 {
+            color: #1f3c88;
+            margin-bottom: 25px;
+        }
+        table {
+            width: 650px;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        th {
+            background-color: #1f3c88;
+            color: white;
+            padding: 14px;
+        }
+        td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        form {
+            width: 550px;
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+        }
+        input {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #bbb;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #1f3c88;
+            color: white;
+            border: none;
+            padding: 11px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            width: 500px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+<center>
+    <h2>Bank Account Details</h2>
+    <table id="account-table">
+        <thead>
+        <tr>
+            <th>Account Number</th>
+            <th>Balance</th>
+            <th>Name</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="account-body"></tbody>
+    </table>
+    <br><br>
+    <form id="accountForm">
+        <label for="ac-number">Account Number:</label>
+        <input type="number" id="ac-number" placeholder="Enter your account number" required>
+        <br><br>
+        <label for="balance">Balance:</label>
+        <input type="number" id="balance" placeholder="Enter your account balance" required>
+        <br><br>
+        <label for="name">Name:</label>
+        <input type="text" id="name" placeholder="Enter your name" required>
+        <br><br>
+        <button type="submit">Submit</button>
+    </form>
+    <br>
+    <form id="depositForm">
+        <label for="deposit-id">Account Number:</label>
+        <input type="number" id="deposit-id" placeholder="Account number" required>
+        <br><br>
+        <label for="deposit-amount">Deposit Amount:</label>
+        <input type="number" id="deposit-amount" placeholder="Amount" required>
+        <br><br>
+        <button type="submit">Deposit</button>
+    </form>
+    <br>
+    <div id="result"></div>
+</center>
+
+<script>
+    function loadBankAccounts() {
+        fetch("/accounts")
+            .then(response => response.json())
+            .then(accounts => {
+                const tableBody = document.getElementById("account-body");
+                tableBody.innerHTML = "";
+                accounts.forEach(account => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${account.accountNumber}</td>
+                        <td>${account.balance}</td>
+                        <td>${account.name}</td>
+                        <td><button type="button" onclick="deleteAccount(${account.accountNumber})">Delete</button></td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error(error));
+    }
+
+    document.getElementById("accountForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        let account = {
+            accountNumber: Number(document.getElementById("ac-number").value),
+            balance: Number(document.getElementById("balance").value),
+            name: document.getElementById("name").value
+        };
+
+        fetch("/account/create", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(account)
+        })
+            .then(response => response.text())
+            .then(result => {
+                document.getElementById("result").innerHTML = `<p>${result}</p>`;
+                document.getElementById("accountForm").reset();
+                loadBankAccounts();
+            })
+            .catch(error => {
+                console.error(error);
+                document.getElementById("result").innerHTML = "<p>Error while creating account</p>";
+            });
+    });
+
+    document.getElementById("depositForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        let id = document.getElementById("deposit-id").value;
+        let amount = document.getElementById("deposit-amount").value;
+
+        fetch(`/account/deposit/${id}?amount=${amount}`, {
+            method: "PUT"
+        })
+            .then(response => response.text())
+            .then(result => {
+                alert(result);
+                document.getElementById("depositForm").reset();
+                loadBankAccounts();
+            })
+            .catch(error => console.error(error));
+    });
+
+    function deleteAccount(id) {
+        fetch(`/account/${id}`, {
+            method: "DELETE"
+        })
+            .then(response => response.text())
+            .then(result => {
+                alert(result);
+                loadBankAccounts();
+            })
+            .catch(error => console.error(error));
+    }
+
+    loadBankAccounts();
+</script>
+</body>
+</html>

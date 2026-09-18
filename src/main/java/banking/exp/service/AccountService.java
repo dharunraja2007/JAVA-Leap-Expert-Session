@@ -17,7 +17,6 @@ public class AccountService {
     public List<BankAccount> getUsers(){
         return accountRepo.findAll();
     }
-    // 1. Create account
     public String createAccount(BankAccount account) {
 
         accountRepo.save(account);
@@ -25,7 +24,6 @@ public class AccountService {
         return "Account created successfully";
     }
 
-    // 2. Get account
     public String getAccount(int id) {
 
         if (accountRepo.existsById(id)) {
@@ -40,7 +38,6 @@ public class AccountService {
         return "Account not found";
     }
 
-    // 3. Deposit money
     public String deposit(int id, double amount) {
 
         if (accountRepo.existsById(id)) {
@@ -58,7 +55,6 @@ public class AccountService {
         return "Account not found";
     }
 
-    // 4. Delete account
     public String deleteAccount(int id) {
 
         if (accountRepo.existsById(id)) {
